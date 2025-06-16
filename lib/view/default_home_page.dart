@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'button_bar.dart';
 import 'set_alarm_page.dart';
 
@@ -9,6 +10,7 @@ class DefaultClockPage extends StatelessWidget
   @override
   Widget build(BuildContext context)
   {
+    final index = context.watch<NavigationProvider>().currentIndex;
     return Scaffold
     (
       appBar: AppBar
@@ -26,14 +28,14 @@ class DefaultClockPage extends StatelessWidget
               {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SetAlarmPage()),
+                  MaterialPageRoute(builder: (context) => const SetAlarmPage()),
                 );
               },
               icon: const Icon(Icons.add, color: Colors.white, size: 30,)
             )
         ],
       ),
-      backgroundColor: const Color.fromARGB(255, 210, 210, 210),
+      backgroundColor: index==0 ? Color.fromARGB(255, 210, 210, 210) : Color.fromARGB(255, 0, 210, 210),
       bottomNavigationBar: const HomeButtonBar(),
     );
   }

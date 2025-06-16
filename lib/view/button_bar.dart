@@ -1,4 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+class NavigationProvider extends ChangeNotifier {
+  int _currentIndex = 0;
+
+  int get currentIndex => _currentIndex;
+
+  void setIndex(int index) {
+    _currentIndex = index;
+    notifyListeners(); // 通知 UI 更新
+  }
+}
 
 class HomeButtonBar extends StatefulWidget
 {
@@ -14,6 +26,7 @@ class _HomeButtonBarState extends State<HomeButtonBar> {
   @override
   Widget build(BuildContext context)
   {
+    final navProvider = Provider.of<NavigationProvider>(context);
     return Container
     (
       padding: const EdgeInsets.symmetric(horizontal: 50),
@@ -44,6 +57,7 @@ class _HomeButtonBarState extends State<HomeButtonBar> {
             {
               setState(() {
                 _selectedBottom = 0;
+                navProvider.setIndex(_selectedBottom);
               });
             },
           ),
@@ -55,6 +69,7 @@ class _HomeButtonBarState extends State<HomeButtonBar> {
             {
               setState(() {
                 _selectedBottom = 1;
+                navProvider.setIndex(_selectedBottom);
               });
             },
           ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'default_clock_page.dart';
+import 'default_home_page.dart';
 
 class SetAlarmPage extends StatelessWidget
 {
