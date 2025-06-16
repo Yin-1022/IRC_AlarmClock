@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'button_bar.dart';
-import 'set_alarm_page.dart';
+import '../view/set_alarm_page.dart';
+import '../view/alarm_clock_page.dart';
+import '../view/friend_page.dart';
 
-class DefaultClockPage extends StatelessWidget
+class DefaultClockPage extends StatefulWidget
 {
   const DefaultClockPage({super.key});
 
+  @override
+  State<DefaultClockPage> createState() => _DefaultClockPageState();
+}
+
+class _DefaultClockPageState extends State<DefaultClockPage> {
   @override
   Widget build(BuildContext context)
   {
@@ -22,21 +29,24 @@ class DefaultClockPage extends StatelessWidget
         title: const Text("Unsleep Me",style: TextStyle(color: Colors.white)),
         actions:
         [
+
           IconButton
             (
               onPressed: ()
               {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SetAlarmPage()),
-                );
+                setState(() {});
+                index == 0 ?
+                showAlarmEditDialog(context) :
+                print("a");
               },
               icon: const Icon(Icons.add, color: Colors.white, size: 30,)
             )
         ],
       ),
-      backgroundColor: index==0 ? Color.fromARGB(255, 210, 210, 210) : Color.fromARGB(255, 0, 210, 210),
+      body: index==0 ? const AlarmClockPage() : const FriendPage(),
       bottomNavigationBar: const HomeButtonBar(),
     );
   }
 }
+
+

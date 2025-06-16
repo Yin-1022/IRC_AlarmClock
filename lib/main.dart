@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
-import 'view/default_home_page.dart';
+import 'components/default_view.dart';
+import 'components/button_bar.dart';
 import 'package:provider/provider.dart';
-import 'view/button_bar.dart';
+import 'view/set_alarm_page.dart';
+
 
 void main()
 {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => NavigationProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AlarmClockProvider()),
+        ChangeNotifierProvider(create: (_) => NavigationProvider()),
+      ],
       child: const App(),
     ),
   );
