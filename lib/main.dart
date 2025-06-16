@@ -15,7 +15,7 @@ class App extends StatelessWidget
   {
     return const MaterialApp
     (
-      home:DefaultClockPage()
+      home:DefaultClockPage(),
     );
   }
 }

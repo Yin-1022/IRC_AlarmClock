@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 
-class HomeButtonBar extends StatelessWidget
+class HomeButtonBar extends StatefulWidget
 {
   const HomeButtonBar({super.key});
 
+  @override
+  State<HomeButtonBar> createState() => _HomeButtonBarState();
+}
+
+int _selectedBottom = 0;
+
+class _HomeButtonBarState extends State<HomeButtonBar> {
   @override
   Widget build(BuildContext context)
   {
     return Container
     (
-      padding: const EdgeInsets.symmetric(horizontal: 100),
+      padding: const EdgeInsets.symmetric(horizontal: 50),
       height: 80,
       decoration: BoxDecoration
       (
@@ -18,7 +25,7 @@ class HomeButtonBar extends StatelessWidget
           [
             BoxShadow
             (
-              color: Colors.black.withOpacity(0.9),
+              color: Colors.black.withValues(alpha: 0.9),
               spreadRadius: 1,
               blurRadius: 8,
             )
@@ -26,22 +33,66 @@ class HomeButtonBar extends StatelessWidget
       ),
       child: Row
       (
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children:
         [
-          Icon
+          ButtonBelow
           (
-            Icons.alarm_add,
-            color: Colors.green.shade400,
-            size: 35,
+            buttonIcon: Icons.alarm_on,
+            buttonID: 0,
+            onTap:()
+            {
+              setState(() {
+                _selectedBottom = 0;
+              });
+            },
           ),
-          Icon
-          (
-            Icons.people,
-            color: Colors.green.shade400,
-            size: 35,
+          ButtonBelow
+            (
+            buttonIcon: Icons.group,
+            buttonID: 1,
+            onTap:()
+            {
+              setState(() {
+                _selectedBottom = 1;
+              });
+            },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class ButtonBelow extends StatelessWidget
+{
+  final VoidCallback onTap;
+  final IconData buttonIcon;
+  final int buttonID;
+
+  const ButtonBelow({
+    required this.onTap,
+    required this.buttonIcon,
+    required this.buttonID,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        color: const Color(0xFF212325),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon
+            (
+                size: 45,
+                buttonIcon,
+                color: _selectedBottom == buttonID ? Colors.blue : Colors.grey),
+          ],
+        ),
       ),
     );
   }
