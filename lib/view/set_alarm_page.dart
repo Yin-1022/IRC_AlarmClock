@@ -1,46 +1,57 @@
 import 'package:flutter/material.dart';
 import '../model/date_selection.dart';
 import 'package:provider/provider.dart';
+import '../data/clock_database.dart';
 
-class AlarmClockProvider with ChangeNotifier {
-  final List<Map<String, dynamic>> _clockData = [];
+void showAlarmEditDialog(BuildContext context,
+    {Map<String, dynamic>? existingData, int? indexToUpdate}) {
+  final isEditing = existingData != null;
 
-  List<Map<String, dynamic>> get clockData => _clockData;
+  final screenWidth = MediaQuery.of(context).size.width;
+  final screenHeight = MediaQuery.of(context).size.height;
 
-  void addClock(Map<String, dynamic> newClock) {
-    _clockData.add(newClock);
-    notifyListeners(); // 通知畫面更新
-  }
+  TextEditingController nameController =
+      TextEditingController(text: existingData?["subtitle"] ?? "");
+  TextEditingController intervalController = TextEditingController(
+      text: (existingData?["sleepInMIN"] ?? 5).toString());
+  TextEditingController repeatController = TextEditingController(
+      text: (existingData?["sleepInAttempt"] ?? 3).toString());
+  String mode = existingData != null && existingData["Day"].length == 1
+      ? "weekly"
+      : "daily";
+  int selectedIndex = existingData != null && existingData["Day"].length == 1
+      ? ["日", "一", "二", "三", "四", "五", "六"].indexOf(existingData["Day"])+1
+      : 3;
+  int volumeLevel = existingData?["volume"] ?? 7;
+  bool increaseVolume = existingData?["volumeTurnOn"] ?? false;
 
-  void toggleSwitch(int index, bool value) {
-    _clockData[index]["isON"] = value;
-    notifyListeners();
-  }
-}
-
-void showAlarmEditDialog(BuildContext context) {
-  TextEditingController nameController = TextEditingController();
-  TextEditingController intervalController = TextEditingController();
-  TextEditingController repeatController = TextEditingController();
-  String mode = "weekly";
-  int selectedIndex = 3;
-  int volumeLevel = 7;
-  bool increaseVolume = false;
   DateTime now = DateTime.now();
-  DateTime selectedDate = now;
-  DateTime defaultTime = now.add(const Duration(hours: 3));
-  int selectedHour = defaultTime.hour;
-  int selectedMinute = defaultTime.minute;
-  final hourController = FixedExtentScrollController(initialItem: 1000 + selectedHour);
-  final minuteController = FixedExtentScrollController(initialItem: 1000 + selectedMinute);
+  DateTime selectedDate = existingData != null && existingData["Day"].length > 1
+      ? DateTime(now.year, int.parse(existingData["Day"].substring(0, 2)),
+          int.parse(existingData["Day"].substring(2, 4)))
+      : now;
+
+  int selectedHour = existingData != null
+      ? (int.parse(existingData["Time"].split(":")[0])+8<=24 ? int.parse(existingData["Time"].split(":")[0])+8 : (int.parse(existingData["Time"].split(":")[0])+8<24 ? int.parse(existingData["Time"].split(":")[0])-8 : int.parse(existingData["Time"].split(":")[0])+8))
+      : now.hour + 3;
+  int selectedMinute = existingData != null
+      ? (int.parse(existingData["Time"].split(":")[1])+20<=60 ? int.parse(existingData["Time"].split(":")[1])+20 : (int.parse(existingData["Time"].split(":")[1])+20<60 ? int.parse(existingData["Time"].split(":")[1])-20 : 60-int.parse(existingData["Time"].split(":")[1])-20))
+      : now.minute;
+
+  final hourController =
+      FixedExtentScrollController(initialItem: 1000 + selectedHour);
+  final minuteController =
+      FixedExtentScrollController(initialItem: 1000 + selectedMinute);
+
+  bool isHourWheelTouched = false;
+  bool isMinWheelTouched = false;
 
   showDialog(
     context: context,
     builder: (context) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      final screenHeight = MediaQuery.of(context).size.height;
       final weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-      final pageController = PageController(viewportFraction: 0.3, initialPage: 1000 + selectedIndex);
+      final pageController = PageController(
+          viewportFraction: 0.3, initialPage: 1000 + selectedIndex);
 
       return StatefulBuilder(
         builder: (context, setState) {
@@ -59,7 +70,8 @@ void showAlarmEditDialog(BuildContext context) {
                           visible: mode == "daily",
                           child: GestureDetector(
                             onTap: () {
-                              showCustomDatePicker(context, selectedDate, (pickedDate) {
+                              showCustomDatePicker(context, selectedDate,
+                                  (pickedDate) {
                                 setState(() {
                                   selectedDate = pickedDate;
                                 });
@@ -67,7 +79,8 @@ void showAlarmEditDialog(BuildContext context) {
                             },
                             child: Container(
                               color: Colors.grey,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 4),
                               child: Text(
                                 "${selectedDate.month.toString().padLeft(2, '0')} / ${selectedDate.day.toString().padLeft(2, '0')}",
                                 style: const TextStyle(fontSize: 30),
@@ -89,13 +102,19 @@ void showAlarmEditDialog(BuildContext context) {
                               },
                               itemBuilder: (context, index) {
                                 int dayIndex = index % 7;
-                                bool isCenter = (pageController.page?.round() ?? pageController.initialPage) == index;
+                                bool isCenter = (pageController.page?.round() ??
+                                        pageController.initialPage) ==
+                                    index;
                                 return AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),
-                                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                  margin:
+                                      const EdgeInsets.symmetric(horizontal: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 10),
                                   decoration: BoxDecoration(
-                                    color: isCenter ? Colors.blue[100] : Colors.grey[300],
+                                    color: isCenter
+                                        ? Colors.blue[100]
+                                        : Colors.grey[300],
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Center(
@@ -103,8 +122,12 @@ void showAlarmEditDialog(BuildContext context) {
                                       weekdays[dayIndex],
                                       style: TextStyle(
                                         fontSize: isCenter ? 24 : 18,
-                                        fontWeight: isCenter ? FontWeight.bold : FontWeight.normal,
-                                        color: isCenter ? Colors.blue[900] : Colors.black54,
+                                        fontWeight: isCenter
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        color: isCenter
+                                            ? Colors.blue[900]
+                                            : Colors.black54,
                                       ),
                                     ),
                                   ),
@@ -132,6 +155,7 @@ void showAlarmEditDialog(BuildContext context) {
                                   onSelectedItemChanged: (index) {
                                     setState(() {
                                       selectedHour = index % 24;
+                                      isHourWheelTouched = true;
                                     });
                                   },
                                   controller: hourController,
@@ -142,14 +166,17 @@ void showAlarmEditDialog(BuildContext context) {
                                       return Center(
                                         child: Text(
                                           hour.toString().padLeft(2, '0'),
-                                          style: const TextStyle(fontSize: 40, color: Colors.black),
+                                          style: const TextStyle(
+                                              fontSize: 40,
+                                              color: Colors.black),
                                         ),
                                       );
                                     },
                                   ),
                                 ),
                               ),
-                              const VerticalDivider(color: Colors.white, thickness: 1.4),
+                              const VerticalDivider(
+                                  color: Colors.white, thickness: 1.4),
                               Expanded(
                                 child: ListWheelScrollView.useDelegate(
                                   itemExtent: 50,
@@ -158,6 +185,7 @@ void showAlarmEditDialog(BuildContext context) {
                                   onSelectedItemChanged: (index) {
                                     setState(() {
                                       selectedMinute = index % 60;
+                                      isMinWheelTouched = true;
                                     });
                                   },
                                   controller: minuteController,
@@ -168,7 +196,9 @@ void showAlarmEditDialog(BuildContext context) {
                                       return Center(
                                         child: Text(
                                           minute.toString().padLeft(2, '0'),
-                                          style: const TextStyle(fontSize: 40, color: Colors.black),
+                                          style: const TextStyle(
+                                              fontSize: 40,
+                                              color: Colors.black),
                                         ),
                                       );
                                     },
@@ -214,10 +244,13 @@ void showAlarmEditDialog(BuildContext context) {
                                   return Ink(
                                     child: InkWell(
                                       child: Container(
-                                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                                        margin: const EdgeInsets.symmetric(
+                                            horizontal: 2),
                                         width: 15,
                                         height: 27,
-                                        color: i < volumeLevel ? Colors.green : Colors.grey,
+                                        color: i < volumeLevel
+                                            ? Colors.green
+                                            : Colors.grey,
                                       ),
                                       onTap: () {
                                         setState(() {
@@ -249,7 +282,8 @@ void showAlarmEditDialog(BuildContext context) {
                                     });
                                   },
                                 ),
-                                const Text("當日", style: TextStyle(fontSize: 18)),
+                                const Text("每週",
+                                    style: TextStyle(fontSize: 18)),
                                 Radio(
                                   value: "daily",
                                   groupValue: mode,
@@ -259,7 +293,8 @@ void showAlarmEditDialog(BuildContext context) {
                                     });
                                   },
                                 ),
-                                const Text("每週", style: TextStyle(fontSize: 18)),
+                                const Text("當日",
+                                    style: TextStyle(fontSize: 18)),
                               ],
                             ),
                           ],
@@ -271,26 +306,28 @@ void showAlarmEditDialog(BuildContext context) {
                           children: [
                             Row(
                               children: [
-                                const Text("賴床： 每隔 ", style: TextStyle(fontSize: 18)),
+                                const Text("賴床： 每隔 ",
+                                    style: TextStyle(fontSize: 18)),
                                 SizedBox(
                                   width: 40,
-                                  child: TextField
-                                    (
-                                      controller: intervalController,
-                                      textAlign: TextAlign.center,
-                                      keyboardType: TextInputType.number,
-                                      onChanged: (value) {
-                                        final intValue = int.tryParse(value);
-                                        if (intValue != null && intValue > 60) {
-                                          intervalController.text = '60';
-                                          intervalController.selection = TextSelection.fromPosition(
-                                            const TextPosition(offset: 2),
-                                          );
-                                        }
-                                      },
-                                    ),
+                                  child: TextField(
+                                    controller: intervalController,
+                                    textAlign: TextAlign.center,
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (value) {
+                                      final intValue = int.tryParse(value);
+                                      if (intValue != null && intValue > 60) {
+                                        intervalController.text = '60';
+                                        intervalController.selection =
+                                            TextSelection.fromPosition(
+                                          const TextPosition(offset: 2),
+                                        );
+                                      }
+                                    },
+                                  ),
                                 ),
-                                const Text(" 分鐘 叫一次", style: TextStyle(fontSize: 18)),
+                                const Text(" 分鐘 叫一次",
+                                    style: TextStyle(fontSize: 18)),
                               ],
                             ),
                             Padding(
@@ -300,26 +337,30 @@ void showAlarmEditDialog(BuildContext context) {
                                 children: [
                                   Row(
                                     children: [
-                                      const Text("共叫 ", style: TextStyle(fontSize: 18)),
+                                      const Text("共叫 ",
+                                          style: TextStyle(fontSize: 18)),
                                       SizedBox(
                                         width: 40,
-                                        child: TextField
-                                        (
+                                        child: TextField(
                                           controller: repeatController,
                                           textAlign: TextAlign.center,
                                           keyboardType: TextInputType.number,
                                           onChanged: (value) {
-                                            final intValue = int.tryParse(value);
-                                            if (intValue != null && intValue > 10) {
+                                            final intValue =
+                                                int.tryParse(value);
+                                            if (intValue != null &&
+                                                intValue > 10) {
                                               repeatController.text = '10';
-                                              repeatController.selection = TextSelection.fromPosition(
+                                              repeatController.selection =
+                                                  TextSelection.fromPosition(
                                                 const TextPosition(offset: 2),
                                               );
                                             }
                                           },
                                         ),
                                       ),
-                                      const Text(" 次", style: TextStyle(fontSize: 18)),
+                                      const Text(" 次",
+                                          style: TextStyle(fontSize: 18)),
                                     ],
                                   ),
                                   Row(
@@ -332,7 +373,8 @@ void showAlarmEditDialog(BuildContext context) {
                                           });
                                         },
                                       ),
-                                      const Text("每次音量提升", style: TextStyle(fontSize: 18)),
+                                      const Text("每次音量提升",
+                                          style: TextStyle(fontSize: 18)),
                                     ],
                                   ),
                                 ],
@@ -347,9 +389,11 @@ void showAlarmEditDialog(BuildContext context) {
                             const Text("音樂： ", style: TextStyle(fontSize: 18)),
                             Expanded(
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
                                 color: Colors.grey,
-                                child: const Text("", style: TextStyle(fontSize: 18)),
+                                child: const Text("",
+                                    style: TextStyle(fontSize: 18)),
                               ),
                             ),
                             const Icon(Icons.share),
@@ -363,43 +407,88 @@ void showAlarmEditDialog(BuildContext context) {
                       children: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text("取消", style: TextStyle(fontSize: 18)),
+                          child:
+                              const Text("取消", style: TextStyle(fontSize: 18)),
                         ),
+                        if (isEditing)
+                          TextButton(
+                            onPressed: () {
+                              Provider.of<AlarmClockProvider>(context,
+                                      listen: false)
+                                  .deleteClock(indexToUpdate!);
+                              Navigator.pop(context);
+                            },
+                            child: const Text("刪除",
+                                style:
+                                    TextStyle(fontSize: 18, color: Colors.red)),
+                          ),
                         TextButton(
                           onPressed: () {
-                            Navigator.pop(context, );
-                            setState((){
-                              final realHour = hourController.selectedItem % 24;
-                              final realMinute = minuteController.selectedItem % 60;
+                            setState(() {
+                              final realHour =
+                                  (hourController.selectedItem - 1000) % 24;
+                              final realMinute =
+                                  (minuteController.selectedItem - 1000) % 60;
+
                               final scheduledTime = DateTime(
+                                selectedDate.year,
                                 selectedDate.month,
                                 selectedDate.day,
                                 realHour,
                                 realMinute,
-                              );
+                              ).toLocal();
 
-                              if (mode == "daily" && scheduledTime.isBefore(DateTime.now())) {
+                              final now = DateTime.now().toLocal();
+
+                              if (mode == "daily" &&
+                                  scheduledTime.isBefore(now)) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Center(child: Text("請選擇未來的日期與時間",style: TextStyle(fontSize: 30),)),
+                                    content: Center(
+                                        child: Text("請選擇未來的日期與時間",
+                                            style: TextStyle(fontSize: 30))),
                                     duration: Duration(seconds: 2),
                                   ),
                                 );
                                 return;
                               }
 
-                              Provider.of<AlarmClockProvider>(context, listen: false).addClock({
-                              "Day" : mode == "weekly" ? (selectedIndex == 3 ? weekdays[selectedIndex-1] : weekdays[selectedIndex]) : "${selectedDate.month.toString().padLeft(2, '0')}${selectedDate.day.toString().padLeft(2, '0')}",
-                              "Time": "${realHour.toString().padLeft(2, '0')}:${realMinute.toString().padLeft(2, '0')}",
-                              "subtitle": nameController.text.isEmpty ? "" : nameController.text,
-                              "volume" : volumeLevel.toInt(),
-                              "sleepInMIN" : intervalController.text.isEmpty ? 5 : intervalController.text,
-                              "sleepInAttempt" : repeatController.text.isEmpty ? 3 : repeatController.text,
-                              "volumeTurnOn" : increaseVolume,
-                              "isON" : true
-                            });});
+                              selectedHour = isHourWheelTouched ? selectedHour : (selectedHour-8>0 ? selectedHour-8 : 24+selectedHour-8);
+                              selectedMinute = isMinWheelTouched ? selectedMinute : (selectedMinute-20>0 ? selectedMinute-20 : 60+selectedMinute-20);
+                              selectedHour = selectedHour==24 ? 0 : selectedHour;
+                              selectedMinute = selectedMinute==60 ? 0 : selectedMinute;
+
+                              final newClock = {
+                                "Day": mode == "weekly"
+                                    ? weekdays[
+                                        (pageController.page?.round() ?? 0) % 7]
+                                    : "${selectedDate.month.toString().padLeft(2, '0')}${selectedDate.day.toString().padLeft(2, '0')}",
+                                "Time": "${selectedHour.toString().padLeft(2, '0')}:${selectedMinute.toString().padLeft(2, '0')}",
+                                "subtitle": nameController.text,
+                                "volume": volumeLevel,
+                                "sleepInMIN":
+                                    int.tryParse(intervalController.text) ?? 5,
+                                "sleepInAttempt":
+                                    int.tryParse(repeatController.text) ?? 3,
+                                "volumeTurnOn": increaseVolume,
+                                "isON": true,
+                              };
+
+                              if (isEditing) {
+                                Provider.of<AlarmClockProvider>(context,
+                                        listen: false)
+                                    .updateClock(indexToUpdate!, newClock);
+                              } else {
+                                Provider.of<AlarmClockProvider>(context,
+                                        listen: false)
+                                    .addClock(newClock);
+                              }
+
+                              Navigator.pop(context);
+                            });
                           },
-                          child: const Text("送出", style: TextStyle(fontSize: 18)),
+                          child:
+                              const Text("送出", style: TextStyle(fontSize: 18)),
                         ),
                       ],
                     ),
@@ -413,5 +502,3 @@ void showAlarmEditDialog(BuildContext context) {
     },
   );
 }
-
-

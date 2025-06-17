@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/adapters.dart';
 import 'components/default_view.dart';
 import 'components/button_bar.dart';
 import 'package:provider/provider.dart';
-import 'view/set_alarm_page.dart';
+  import 'data/clock_database.dart';
 
-
-void main()
+void main() async
 {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Hive.initFlutter();
+  await Hive.openBox('dataBox');
+
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AlarmClockProvider()),
+        ChangeNotifierProvider(create: (_)
+        {
+          final provider = AlarmClockProvider();
+          provider.loadInitialData(); // 這裡載入資料
+          return provider;
+        }),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
       ],
       child: const App(),

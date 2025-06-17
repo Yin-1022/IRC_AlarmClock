@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../data/clock_database.dart';
 import '../view/set_alarm_page.dart';
 
 class AlarmClockPage extends StatefulWidget {
@@ -13,8 +14,7 @@ class _AlarmClockPageState extends State<AlarmClockPage>
 {
   @override
   Widget build(BuildContext context) {
-    final alarmProvider = context.watch<AlarmClockProvider>();
-    final clockData = alarmProvider.clockData;
+    final clockData = context.watch<AlarmClockProvider>().clockData;
 
     return Scaffold
     (
@@ -44,6 +44,13 @@ class _AlarmClockPageState extends State<AlarmClockPage>
                         children: [
                           ListTile
                           (
+                            onTap: () {
+                              showAlarmEditDialog(
+                                context,
+                                existingData: task,
+                                indexToUpdate: index,
+                              );
+                            },
                             leading: task["Day"].toString().length == 1 ?
                               Text(task["Day"] , style: const TextStyle(fontSize: 30),):
                               Column
@@ -63,10 +70,7 @@ class _AlarmClockPageState extends State<AlarmClockPage>
                                 value: task["isON"],
                                 activeColor: Colors.green,
                                 onChanged: (bool value) {
-                                  setState(() {
-                                    task["isON"] = value;
-                                    alarmProvider.toggleSwitch(index, value);
-                                  });
+                                  context.read<AlarmClockProvider>().toggleSwitch(index, value);
                                 },
                               ),
                           ),
@@ -82,3 +86,4 @@ class _AlarmClockPageState extends State<AlarmClockPage>
     );
   }
 }
+
